@@ -1,0 +1,9 @@
+<div>
+  <button (click)="loadDemoImages()" [disabled]="disabled">Load demo images</button>
+</div>
+<div>
+  <button *ngFor="let channel of channels" (mouseenter)="updateChannel(channel)">{{channel}}</button>
+</div>
+<div>
+  <img *ngFor="let sample of visibleChannels" src="{{sample}}" width="100"/>
+</div>
