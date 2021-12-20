@@ -1,21 +1,36 @@
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
+import {APP_INITIALIZER, NgModule} from '@angular/core';
+import {BrowserModule} from '@angular/platform-browser';
 
-import { AppComponent } from './app.component';
-import { ImageComponent } from './image/image.component';
-import { HttpClientModule } from "@angular/common/http";
+import {AppComponent} from './app.component';
+import {ImageComponent} from './image/image.component';
+import {HttpClientModule} from "@angular/common/http";
+import {ModelComponent} from './model/model.component';
+import {AppConfigService} from "./app-config.service";
 
+const loadSettings = (appConfigService: AppConfigService) => {
+  return () => appConfigService.load();
+}
 
 @NgModule({
   declarations: [
     AppComponent,
-    ImageComponent
+    ImageComponent,
+    ModelComponent
   ],
   imports: [
     BrowserModule,
     HttpClientModule
   ],
-  providers: [],
+  providers: [
+    AppConfigService,
+    {
+      provide: APP_INITIALIZER,
+      useFactory: loadSettings,
+      multi: true,
+      deps: [AppConfigService]
+    }
+  ],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {
+}

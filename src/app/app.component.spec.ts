@@ -2,11 +2,12 @@ import {TestBed} from '@angular/core/testing';
 import {AppComponent} from './app.component';
 import {ImageComponent} from "./image/image.component";
 import {HttpClientModule} from "@angular/common/http";
+import {ModelComponent} from "./model/model.component";
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [AppComponent, ImageComponent],
+      declarations: [AppComponent, ImageComponent, ModelComponent],
       imports: [HttpClientModule]
     }).compileComponents();
   });
@@ -17,9 +18,9 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have as title 'icyt-tfjs'`, () => {
+  it(`should contain 'icyt-tfjs' in title`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('icyt-tfjs');
+    expect(app.title).toContain('icyt-tfjs');
   });
 });
