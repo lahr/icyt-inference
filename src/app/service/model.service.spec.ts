@@ -1,7 +1,7 @@
 import {TestBed} from '@angular/core/testing';
 
 import {ModelService} from './model.service';
-import {AppSettings} from "./app-settings";
+import {AppSettings} from "../domain/app-settings";
 
 describe('ModelService', () => {
   let service: ModelService;

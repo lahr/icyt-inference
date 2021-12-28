@@ -1,10 +1,10 @@
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 
 import {PredictComponent} from './predict.component';
-import {ModelService} from "../model.service";
+import {ModelService} from "../service/model.service";
 import {of} from "rxjs";
-import {PredictService} from "../predict.service";
-import {Predictions} from "../predictions";
+import {PredictService} from "../service/predict.service";
+import {Predictions} from "../domain/predictions";
 
 describe('PredictComponent', () => {
   let component: PredictComponent;

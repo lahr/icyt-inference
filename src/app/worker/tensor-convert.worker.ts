@@ -4,7 +4,7 @@ import TiffIfd from "tiff/lib/tiffIfd";
 import * as tiff from "tiff";
 import * as tf from "@tensorflow/tfjs";
 import {Tensor2D, Tensor3D} from "@tensorflow/tfjs";
-import {SerializedTensor} from "./serialized-tensor";
+import {SerializedTensor} from "../domain/serialized-tensor";
 
 const MEANS = new Map([
   [1, 730.3922394],

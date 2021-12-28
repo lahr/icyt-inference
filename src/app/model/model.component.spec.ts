@@ -1,7 +1,7 @@
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 
 import {ModelComponent} from './model.component';
-import {ModelService} from "../model.service";
+import {ModelService} from "../service/model.service";
 import {of, throwError} from "rxjs";
 
 describe('ModelComponent', () => {

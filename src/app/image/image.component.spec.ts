@@ -3,9 +3,9 @@ import {ImageComponent} from './image.component';
 import {of} from "rxjs";
 import {HttpClientTestingModule, HttpTestingController} from "@angular/common/http/testing";
 import {Type} from "@angular/core";
-import {TensorService} from "../tensor.service";
+import {TensorService} from "../service/tensor.service";
 import {By} from "@angular/platform-browser";
-import {ModelService} from "../model.service";
+import {ModelService} from "../service/model.service";
 
 describe('ImageComponent', () => {
   let component: ImageComponent;

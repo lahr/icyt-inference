@@ -1,10 +1,10 @@
 import {Injectable} from '@angular/core';
 import {Tensor2D} from "@tensorflow/tfjs";
-import {Prediction} from "./prediction";
+import {Prediction} from "../domain/prediction";
 import {Tensor} from "@tensorflow/tfjs-core/dist/tensor";
-import {CLASS_NAMES} from "./predict/classes";
-import {SerializedTensor} from "./serialized-tensor";
-import {Predictions} from "./predictions";
+import {CLASS_NAMES} from "../domain/classes";
+import {SerializedTensor} from "../domain/serialized-tensor";
+import {Predictions} from "../domain/predictions";
 import {TensorService} from "./tensor.service";
 import {ModelService} from "./model.service";
 
@@ -35,7 +35,7 @@ export class PredictService {
   }
 
   private predictWithWorker(serializedTensor: SerializedTensor): Promise<Tensor2D> {
-    const worker = new Worker(new URL('./predict.worker', import.meta.url));
+    const worker = new Worker(new URL('../worker/predict.worker', import.meta.url));
     const promise: Promise<Tensor2D> = new Promise((resolve, reject) => {
       worker.onmessage = ({data}) => {
         resolve(SerializedTensor.deserialize(data));

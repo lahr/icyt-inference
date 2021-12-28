@@ -1,8 +1,8 @@
 import {Component, OnInit, Renderer2} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {forkJoin, Observable} from "rxjs";
-import {TensorService} from "../tensor.service";
-import {ModelService} from "../model.service";
+import {TensorService} from "../service/tensor.service";
+import {ModelService} from "../service/model.service";
 
 @Component({
   selector: 'app-image',

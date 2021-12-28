@@ -2,7 +2,7 @@
 
 import {GraphModel, Tensor2D, Tensor4D} from "@tensorflow/tfjs";
 import * as base64 from "base64-arraybuffer";
-import {SerializedTensor} from "./serialized-tensor";
+import {SerializedTensor} from "../domain/serialized-tensor";
 
 function deserializeModel(serializedModel: string): GraphModel {
   const artifacts = JSON.parse(serializedModel);

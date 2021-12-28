@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
 import {image, stack, Tensor3D, Tensor4D} from "@tensorflow/tfjs";
-import {SerializedTensor} from "./serialized-tensor";
+import {SerializedTensor} from "../domain/serialized-tensor";
 
 const [height, width] = [224, 224];
 

@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {Subscription} from "rxjs";
-import {AppSettings} from "./app-settings";
+import {AppSettings} from "../domain/app-settings";
 
 @Injectable({
   providedIn: 'root'

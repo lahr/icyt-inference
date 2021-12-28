@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {browser, Tensor3D, Tensor4D} from "@tensorflow/tfjs";
-import {SerializedTensor} from "./serialized-tensor";
+import {SerializedTensor} from "../domain/serialized-tensor";
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +14,7 @@ export class TensorService {
   }
 
   private static tiffToTensor(imageBuffer: ArrayBuffer): Promise<Tensor3D> {
-    const worker = new Worker(new URL('./tensor-convert.worker', import.meta.url));
+    const worker = new Worker(new URL('../worker/tensor-convert.worker', import.meta.url));
     const result = new Promise<Tensor3D>((resolve, reject) => {
       worker.onmessage = ({data}) => resolve(SerializedTensor.deserialize(data));
       worker.onerror = (e: ErrorEvent) => {
@@ -48,7 +48,7 @@ export class TensorService {
   }
 
   convertToPredictTensors(selectedChannels: number[]): Promise<Tensor4D> {
-    const worker = new Worker(new URL('./tensor-predict.worker', import.meta.url));
+    const worker = new Worker(new URL('../worker/tensor-predict.worker', import.meta.url));
     const result = new Promise<Tensor4D>((resolve, reject) => {
       worker.onmessage = ({data}) => resolve(SerializedTensor.deserialize(data));
       worker.onerror = (e: ErrorEvent) => {

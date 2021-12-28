@@ -2,7 +2,7 @@ import {TestBed} from '@angular/core/testing';
 
 import {AppConfigService} from './app-config.service';
 import {HttpClientTestingModule, HttpTestingController} from "@angular/common/http/testing";
-import {AppSettings} from "./app-settings";
+import {AppSettings} from "../domain/app-settings";
 
 describe('AppConfigService', () => {
   let service: AppConfigService;

@@ -1,7 +1,7 @@
 import {Component, OnInit} from '@angular/core';
-import {ModelService} from "../model.service";
-import {PredictService} from "../predict.service";
-import {Predictions} from "../predictions";
+import {ModelService} from "../service/model.service";
+import {PredictService} from "../service/predict.service";
+import {Predictions} from "../domain/predictions";
 
 @Component({
   selector: 'app-predict',

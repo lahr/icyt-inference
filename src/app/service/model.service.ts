@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {Observable, Subject, Subscriber} from "rxjs";
 import {GraphModel, loadGraphModel} from "@tensorflow/tfjs";
-import {AppSettings} from "./app-settings";
+import {AppSettings} from "../domain/app-settings";
 
 @Injectable({
   providedIn: 'root'
@@ -35,7 +35,7 @@ export class ModelService {
   }
 
   private modelToJson(model: GraphModel): Promise<string> {
-    const worker = new Worker(new URL('./model.worker', import.meta.url));
+    const worker = new Worker(new URL('../worker/model.worker', import.meta.url));
     const promise: Promise<string> = new Promise<string>((resolve, reject) => {
       worker.onmessage = ({data}) => resolve(data as string);
       worker.onerror = (e: ErrorEvent) => {

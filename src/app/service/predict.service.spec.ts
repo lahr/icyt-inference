@@ -4,8 +4,8 @@ import {PredictService} from './predict.service';
 import {of} from "rxjs";
 import {ModelService} from "./model.service";
 import {TensorService} from "./tensor.service";
-import {Predictions} from "./predictions";
-import {Prediction} from "./prediction";
+import {Predictions} from "../domain/predictions";
+import {Prediction} from "../domain/prediction";
 import {ones, Tensor2D, tensor2d, Tensor4D, tensor4d} from "@tensorflow/tfjs";
 
 describe('PredictService', () => {

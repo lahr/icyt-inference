@@ -5,7 +5,7 @@ import {AppComponent} from './app.component';
 import {ImageComponent} from './image/image.component';
 import {HttpClientModule} from "@angular/common/http";
 import {ModelComponent} from './model/model.component';
-import {AppConfigService} from "./app-config.service";
+import {AppConfigService} from "./service/app-config.service";
 import { PredictComponent } from './predict/predict.component';
 
 const loadSettings = (appConfigService: AppConfigService) => {
