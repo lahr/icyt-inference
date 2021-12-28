@@ -1,55 +1,47 @@
 import {Injectable} from '@angular/core';
-import {Subject} from "rxjs";
-import * as tf from "@tensorflow/tfjs";
-import {browser, Tensor2D, Tensor3D} from "@tensorflow/tfjs";
-import TiffIfd from "tiff/lib/tiffIfd";
-import * as tiff from "tiff";
+import {browser, tensor3d, Tensor3D} from "@tensorflow/tfjs";
 
 @Injectable({
   providedIn: 'root'
 })
 export class TensorService {
 
-  private tensorSource = new Subject<Tensor3D[]>();
-  tensorObservable = this.tensorSource.asObservable();
   private numChannels: number = 0;
+  private _tensors: Tensor3D[] = [];
 
   constructor() {
   }
 
-  private static tiffToTensor(imageBuffer: ArrayBuffer): Tensor3D {
-    const image: TiffIfd = tiff.decode(imageBuffer)[0];
-    return tf.tensor3d(Array.from(image.data), [image.height, image.width, image.get('SamplesPerPixel')], 'float32');
+  get tensors(): Tensor3D[] {
+    return this._tensors;
   }
 
-  initializeTensors(imageBuffers: ArrayBuffer[]): void {
-    const tensors = imageBuffers.map(imageBuffer => TensorService.tiffToTensor(imageBuffer));
-    this.numChannels = tensors.flatMap(tensor => tensor.shape[2]).reduce((p, c) => {
-      if (p != c) this.tensorSource.error(new Error(`Different channel numbers ${p} and ${c}.`))
-      return c
-    })
-    this.tensorSource.next(tensors);
+  private static tiffToTensor(imageBuffer: ArrayBuffer): Promise<Tensor3D> {
+    const worker = new Worker(new URL('./tensor.worker', import.meta.url));
+    const result = new Promise<Tensor3D>(resolve => worker.onmessage = ({data}) => {
+      resolve(tensor3d(data[0], data[1]));
+    });
+    worker.postMessage(imageBuffer);
+    return result;
   }
 
-  convertToImageData(tensors: Tensor3D[], channelNr: number): Promise<ImageData>[] {
-    return tensors.map(tensor => {
-      const channel = TensorService.normalize(tensor.slice([0, 0, channelNr], [tensor.shape[0], tensor.shape[1], 1]));
+  async initializeTensors(imageBuffers: ArrayBuffer[]): Promise<number> {
+    this._tensors = await Promise.all(imageBuffers.map(imageBuffer => TensorService.tiffToTensor(imageBuffer)));
+    this.numChannels = this._tensors.flatMap((tensor: Tensor3D) => tensor.shape[2]).reduce((p: number, c: number) => {
+      if (p != c) throw new Error(`Different channel numbers ${p} and ${c}.`);
+      return c;
+    });
+    return this.numChannels;
+  }
+
+  convertToImageData(channelNr: number): Promise<ImageData>[] {
+    return this._tensors.map(tensor => {
+      const channel = tensor.slice([0, 0, channelNr - 1], [tensor.shape[0], tensor.shape[1], 1]);
       return browser.toPixels(channel)
         .then(bytes => {
           const [height, width] = channel.shape.slice(0, 2);
           return new ImageData(bytes, width, height);
         });
     });
-  }
-
-  private static normalize(tensor: Tensor3D): Tensor3D {
-    const channels: Tensor2D[] = [];
-    for (const channel of tensor.unstack(-1)) {
-      const numerator = channel.sub(channel.min());
-      const denominator = channel.max().sub(channel.min());
-      const c: Tensor2D = numerator.divNoNan(denominator);
-      channels.push(c);
-    }
-    return tf.stack(channels, -1) as Tensor3D
   }
 }

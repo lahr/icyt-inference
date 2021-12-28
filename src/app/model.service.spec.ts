@@ -20,7 +20,7 @@ describe('ModelService', () => {
     service.loadModel('invalid').subscribe({
       next: progress => done.fail('should not progress'),
       error: err => {
-        expect(err.message).toBe('Request to /assets-test/models/invalid/model.json failed with status code 404. Please verify this URL points to the model JSON of the model to load.');
+        expect(err).toEqual(new Error('Request to /assets-test/models/invalid/model.json failed with status code 404. Please verify this URL points to the model JSON of the model to load.'));
         done();
       },
       complete: () => done.fail('should not complete')

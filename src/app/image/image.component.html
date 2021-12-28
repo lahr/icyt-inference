@@ -2,7 +2,8 @@
   <button (click)="loadDemoImages()" [disabled]="disabled">Load demo images</button>
 </div>
 <div>
-  <button *ngFor="let channel of channels" (mouseenter)="updateChannel(channel)">{{channel}}</button>
+  <button *ngFor="let channel of channels" (mouseenter)="updateChannel(channel)"
+          [ngClass]="{'channel-button': true, 'active': selectedChannels.includes(channel)}">{{channel}}</button>
 </div>
 <div>
   <img *ngFor="let sample of visibleChannels" src="{{sample}}" width="100"/>

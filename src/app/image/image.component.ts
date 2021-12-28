@@ -1,8 +1,8 @@
 import {Component, OnInit, Renderer2} from '@angular/core';
-import {Tensor3D} from "@tensorflow/tfjs";
 import {HttpClient} from "@angular/common/http";
 import {forkJoin, Observable} from "rxjs";
 import {TensorService} from "../tensor.service";
+import {ModelService} from "../model.service";
 
 @Component({
   selector: 'app-image',
@@ -15,19 +15,17 @@ export class ImageComponent implements OnInit {
   visibleChannels: string[] = [];
   channels: number[] = [];
   disabled: boolean = false;
-  tensors: Tensor3D[] = [];
+  selectedChannels: number[] = [];
 
   constructor(private tensorService: TensorService,
+              private modelService: ModelService,
               private http: HttpClient,
               private renderer: Renderer2) {
   }
 
   ngOnInit(): void {
-    this.tensorService.tensorObservable.subscribe(tensors => {
-      this.tensors = tensors;
-      this.channels = Array.from(Array(this.tensors[0].shape[2]).keys());
-      this.updateChannel(0);
-    });
+    this.modelService.selectedChannelsObservable
+      .subscribe(selectedChannels => this.selectedChannels = selectedChannels);
   }
 
   loadDemoImages(): void {
@@ -42,7 +40,10 @@ export class ImageComponent implements OnInit {
       images.map(image => basePath + image)
         .map(path => this.fetchImage(path)))
       .subscribe(buffers => {
-        this.tensorService.initializeTensors(buffers)
+        this.tensorService.initializeTensors(buffers).then(num_channels => {
+          this.channels = Array.from({length: num_channels}, (_, i) => i + 1);
+          this.updateChannel(1);
+        })
       });
   }
 
@@ -51,7 +52,7 @@ export class ImageComponent implements OnInit {
   }
 
   updateChannel(channel: number) {
-    this.tensorService.convertToImageData(this.tensors, channel)
+    this.tensorService.convertToImageData(channel)
       .forEach((promise, i) => promise.then(image => {
         const canvas = this.renderer.createElement('canvas');
         canvas.width = image.width;
@@ -59,6 +60,6 @@ export class ImageComponent implements OnInit {
         const ctx = canvas.getContext('2d');
         ctx.putImageData(image, 0, 0);
         this.visibleChannels[i] = canvas.toDataURL();
-      }))
+      }));
   }
 }

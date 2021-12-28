@@ -24,14 +24,18 @@ describe('ModelComponent', () => {
     fixture.detectChanges();
   });
 
+  function getLoadModelButton() {
+    return fixture.debugElement
+      .query(buttonDebugEl => buttonDebugEl.nativeElement.textContent === 'Load model').nativeElement;
+  }
+
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
   it('should disable load model button when clicked', () => {
     modelServiceSpy.loadModel.and.returnValue(of(1))
-    const loadModelButton = fixture.debugElement
-      .query(buttonDebugEl => buttonDebugEl.nativeElement.textContent === 'Load model').nativeElement;
+    const loadModelButton = getLoadModelButton();
     expect(loadModelButton.disabled).toBeFalse();
     loadModelButton.click();
     expect(loadModelButton.disabled).toBeTrue();
@@ -40,9 +44,7 @@ describe('ModelComponent', () => {
   it('should show an error if model cannot be loaded', () => {
     const error404 = 'Error 404'
     const spyAnd = modelServiceSpy.loadModel.and.returnValue(throwError(() => error404))
-    fixture.debugElement
-      .query(buttonDebugEl => buttonDebugEl.nativeElement.textContent === 'Load model').nativeElement
-      .click();
+    getLoadModelButton().click();
     expect(spyAnd.calls.count()).toBe(1);
     fixture.detectChanges()
     const statusField = fixture.debugElement
@@ -52,11 +54,9 @@ describe('ModelComponent', () => {
 
   it('should display that model has been successfully loaded', () => {
     const dummyValue = 1;
-    const spyAnd = modelServiceSpy.loadModel.and.returnValue(of(dummyValue))
-    fixture.debugElement
-      .query(buttonDebugEl => buttonDebugEl.nativeElement.textContent === 'Load model').nativeElement
-      .click();
-    expect(spyAnd.calls.count()).toBe(1);
+    const modelServiceCall = modelServiceSpy.loadModel.and.returnValue(of(dummyValue))
+    getLoadModelButton().click();
+    expect(modelServiceCall.calls.count()).toBe(1);
     fixture.detectChanges()
     const statusField = fixture.debugElement
       .query(debugEl => debugEl.nativeElement.id === 'model-progress').nativeElement;
