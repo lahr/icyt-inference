@@ -1,0 +1,8 @@
+<button (click)="predict()" [disabled]="disabled">Predict</button>
+<div *ngFor="let predictions of predictions">
+  <ul>
+    <li *ngFor="let resultItem of predictions.predictions">
+       {{resultItem.className}} - {{resultItem.probability}}
+    </li>
+  </ul>
+</div>

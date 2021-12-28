@@ -4,6 +4,7 @@ import TiffIfd from "tiff/lib/tiffIfd";
 import * as tiff from "tiff";
 import * as tf from "@tensorflow/tfjs";
 import {Tensor2D, Tensor3D} from "@tensorflow/tfjs";
+import {SerializedTensor} from "./serialized-tensor";
 
 const MEANS = new Map([
   [1, 730.3922394],
@@ -27,7 +28,7 @@ const STDDEVS = new Map([
 function standardize(tensor: Tensor3D): Tensor3D {
   return tf.stack(tensor.unstack(-1).map((slice, i) => {
     const channel = i + 1;
-    if (MEANS.get(channel) == undefined || STDDEVS.get(channel) == undefined) return slice;
+    if (MEANS.get(channel) === undefined || STDDEVS.get(channel) === undefined) return slice;
     return slice.sub(MEANS.get(channel)!).div(STDDEVS.get(channel)!);
   }), -1) as Tensor3D;
 }
@@ -47,5 +48,5 @@ addEventListener('message', ({data}) => {
   let tensor: Tensor3D = tf.tensor3d(Array.from(image.data), shape, 'float32')
   tensor = standardize(tensor);
   tensor = normalize(tensor);
-  postMessage([tensor.dataSync(), shape]);
+  postMessage(new SerializedTensor(tensor));
 });

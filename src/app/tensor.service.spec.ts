@@ -46,7 +46,7 @@ describe('TensorService', () => {
       const buffers = [buffer_a, buffer_b];
 
       service.initializeTensors(buffers).then(ignored => {
-        expect(service.tensors).toEqual(tensors);
+        expect((<any>service).tensors).toEqual(tensors);
         done();
       });
     });
@@ -71,6 +71,17 @@ describe('TensorService', () => {
         });
     });
 
+  it('#initializeTensors should throw error if ArrayBuffers invalid',
+    (done: DoneFn) => {
+      const buffers = [new ArrayBuffer(0)];
+      service.initializeTensors(buffers)
+        .then(ignored => done.fail('should never complete'))
+        .catch(error => {
+          expect(error).toEqual(new Error('Uncaught RangeError: Offset is outside the bounds of the DataView'));
+          done();
+        });
+    });
+
   it('#convertToImageData should convert a tensor channel to a ImageData object',
     (done: DoneFn) => {
       const imageData: ImageData[] = [imageData_a, imageData_b];
@@ -78,8 +89,28 @@ describe('TensorService', () => {
         Promise.all(service.convertToImageData(1)).then(result => {
           expect(result).toEqual(imageData)
           done();
-        })
-      })
+        });
+      });
     });
-})
-;
+
+  it('#convertToPredictTensors should convert list of 3D tensors to one 4D tensor', (done: DoneFn) => {
+    service.initializeTensors([buffer_a, buffer_b]).then(ignored => {
+      service.convertToPredictTensors([2]).then(result => {
+        expect(result.shape).toEqual([2, 224, 224, 1]);
+        done()
+      });
+    });
+  });
+
+  it('#convertToPredictTensors should fail if no channel is selected', (done: DoneFn) => {
+    const emptySelectedChannels: number[] = [];
+    service.initializeTensors([buffer_a, buffer_b]).then(ignored => {
+      service.convertToPredictTensors(emptySelectedChannels).then(ignored => {
+        done.fail('should not complete');
+      }).catch(error => {
+        expect(error).toEqual(new Error('Uncaught Error: selectedChannels must not be empty'));
+        done();
+      });
+    });
+  });
+});

@@ -24,8 +24,8 @@ export class ImageComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.modelService.selectedChannelsObservable
-      .subscribe(selectedChannels => this.selectedChannels = selectedChannels);
+    this.modelService.modelObservable
+      .subscribe(([ignored, selectedChannels]) => this.selectedChannels = selectedChannels);
   }
 
   loadDemoImages(): void {

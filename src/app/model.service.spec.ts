@@ -16,6 +16,14 @@ describe('ModelService', () => {
     expect(service).toBeTruthy();
   });
 
+  it('should complete without error if model can be loaded', (done: DoneFn) => {
+    service.loadModel('mock-model').subscribe({
+      next: progress => expect(progress).toBeGreaterThanOrEqual(0),
+      error: error => done.fail('should not throw error'),
+      complete: () => done()
+    })
+  });
+
   it('should throw an error if model cannot be loaded', (done: DoneFn) => {
     service.loadModel('invalid').subscribe({
       next: progress => done.fail('should not progress'),
@@ -27,11 +35,14 @@ describe('ModelService', () => {
     })
   });
 
-  it('should complete without error if model can be loaded', (done: DoneFn) => {
+  it('should throw an error if model cannot be serialized', (done: DoneFn) => {
+    spyOn<any>(service, 'loadGraphModel').and.returnValue(Promise.resolve({artifacts: {}}))
     service.loadModel('mock-model').subscribe({
-      next: progress => expect(progress).toBeGreaterThanOrEqual(0),
-      error: error => done.fail('should not throw error'),
-      complete: () => done()
+      error: err => {
+        expect(err).toEqual(new Error('Uncaught Error: weightData must not be undefined'));
+        done();
+      },
+      complete: () => done.fail('should not complete')
     })
   });
 });

@@ -20,7 +20,7 @@ describe('ImageComponent', () => {
 
   beforeEach(async () => {
     tensorServiceSpy = jasmine.createSpyObj('TensorService', ['initializeTensors', 'convertToImageData']);
-    modelServiceSpy = jasmine.createSpyObj('ModelService', [], {selectedChannelsObservable: of([2])});
+    modelServiceSpy = jasmine.createSpyObj('ModelService', [], {modelObservable: of(['serializedModel', [2]])});
 
     await TestBed.configureTestingModule({
       declarations: [ImageComponent],

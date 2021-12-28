@@ -3,11 +3,12 @@ import {AppComponent} from './app.component';
 import {ImageComponent} from "./image/image.component";
 import {HttpClientModule} from "@angular/common/http";
 import {ModelComponent} from "./model/model.component";
+import {PredictComponent} from "./predict/predict.component";
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [AppComponent, ImageComponent, ModelComponent],
+      declarations: [AppComponent, ImageComponent, ModelComponent, PredictComponent],
       imports: [HttpClientModule]
     }).compileComponents();
   });

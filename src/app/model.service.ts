@@ -8,15 +8,10 @@ import {AppSettings} from "./app-settings";
 })
 export class ModelService {
 
-  static readonly selectedChannels: number[] = [1, 2, 3, 4, 5, 6, 9];
+  private static readonly SELECTED_CHANNELS: number[] = [1, 2, 3, 4, 5, 6, 9];
 
-  private selectedChannelsSource = new Subject<number[]>();
-  public selectedChannelsObservable = this.selectedChannelsSource.asObservable();
-
-  private modelSource = new Subject<string>();
+  private modelSource = new Subject<[string, number[]]>();
   public modelObservable = this.modelSource.asObservable();
-
-  private serializedModel?: string;
 
   constructor() {
   }
@@ -26,9 +21,7 @@ export class ModelService {
       this.loadGraphModel(modelName, subscriber)
         .then((model: GraphModel) => this.modelToJson(model))
         .then((serializedModel: string) => {
-          this.selectedChannelsSource.next(ModelService.selectedChannels)
-          this.modelSource.next(serializedModel)
-          this.serializedModel = serializedModel;
+          this.modelSource.next([serializedModel, ModelService.SELECTED_CHANNELS])
           subscriber.complete();
         })
         .catch(error => subscriber.error(error));
@@ -37,19 +30,20 @@ export class ModelService {
 
   private loadGraphModel(modelName: string, subscriber: Subscriber<number>): Promise<GraphModel> {
     return loadGraphModel(`${AppSettings.MODEL_BASE_URL}/${modelName}/model.json`, {
-      onProgress: p => {
-        subscriber.next(Math.round(p * 100));
-      }
+      onProgress: p => subscriber.next(Math.round(p * 100))
     });
   }
 
   private modelToJson(model: GraphModel): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const worker = new Worker(new URL('./model.worker', import.meta.url));
-      worker.onmessage = ({data}) => {
-        resolve(data as string);
-      };
-      worker.postMessage((<any>model).artifacts);
-    })
+    const worker = new Worker(new URL('./model.worker', import.meta.url));
+    const promise: Promise<string> = new Promise<string>((resolve, reject) => {
+      worker.onmessage = ({data}) => resolve(data as string);
+      worker.onerror = (e: ErrorEvent) => {
+        e.preventDefault();
+        reject(new Error(e.message));
+      }
+    });
+    worker.postMessage((<any>model).artifacts);
+    return promise;
   }
 }
