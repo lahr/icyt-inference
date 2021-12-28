@@ -45,8 +45,9 @@ function normalize(tensor: Tensor3D): Tensor3D {
 addEventListener('message', ({data}) => {
   const image: TiffIfd = tiff.decode(data)[0];
   const shape: [number, number, number] = [image.height, image.width, image.get('SamplesPerPixel')];
-  let tensor: Tensor3D = tf.tensor3d(Array.from(image.data), shape, 'float32')
+  let tensor: Tensor3D = tf.tensor3d(Array.from(image.data), shape, 'float32');
   tensor = standardize(tensor);
   tensor = normalize(tensor);
   postMessage(new SerializedTensor(tensor));
+  close();
 });

@@ -6,8 +6,8 @@ addEventListener('message', ({data}) => {
   if (data.weightData === undefined) {
     throw new Error('weightData must not be undefined');
   }
-  data.weightData = base64.encode(data.weightData)
+  data.weightData = base64.encode(data.weightData);
   const jsonModel = JSON.stringify(data);
-
   postMessage(jsonModel);
+  close();
 });

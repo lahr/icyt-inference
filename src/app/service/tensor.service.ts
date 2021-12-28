@@ -54,8 +54,8 @@ export class TensorService {
       worker.onerror = (e: ErrorEvent) => {
         e.preventDefault();
         reject(new Error(e.message));
-      }
-    });
+      };
+    }).finally(() => worker.terminate());
     worker.postMessage({
       tensors: this.tensors.map(tensor => new SerializedTensor(tensor)),
       selectedChannels: selectedChannels,

@@ -35,8 +35,8 @@ export class PredictService {
   }
 
   private predictWithWorker(serializedTensor: SerializedTensor): Promise<Tensor2D> {
-    const worker = new Worker(new URL('../worker/predict.worker', import.meta.url));
-    const promise: Promise<Tensor2D> = new Promise((resolve, reject) => {
+    const worker: Worker = new Worker(new URL('../worker/predict.worker', import.meta.url));
+    const promise: Promise<Tensor2D> = new Promise<Tensor2D>((resolve, reject) => {
       worker.onmessage = ({data}) => {
         resolve(SerializedTensor.deserialize(data));
       };

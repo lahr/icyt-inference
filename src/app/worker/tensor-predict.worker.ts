@@ -19,6 +19,6 @@ addEventListener('message', ({data}) => {
       ), -1) as Tensor3D
     )
     .map((tensor: Tensor3D) => image.resizeBilinear(tensor, [height, width]))) as Tensor4D;
-
   postMessage(new SerializedTensor(predictionTensor));
+  close();
 });

@@ -41,7 +41,7 @@ export class ModelService {
       worker.onerror = (e: ErrorEvent) => {
         e.preventDefault();
         reject(new Error(e.message));
-      }
+      };
     });
     worker.postMessage((<any>model).artifacts);
     return promise;

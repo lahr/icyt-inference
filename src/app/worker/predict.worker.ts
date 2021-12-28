@@ -17,5 +17,6 @@ addEventListener('message', ({data}) => {
     const tensor: Tensor4D = SerializedTensor.deserialize(data.serializedTensor);
     const predictions = model.predict(tensor) as Tensor2D;
     postMessage(new SerializedTensor(predictions));
+    close();
   }
 );
