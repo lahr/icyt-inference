@@ -7,6 +7,7 @@ import {SerializedTensor} from "../domain/serialized-tensor";
 import {Predictions} from "../domain/predictions";
 import {TensorService} from "./tensor.service";
 import {ModelService} from "./model.service";
+import {Subject} from "rxjs";
 
 
 @Injectable({
@@ -14,8 +15,10 @@ import {ModelService} from "./model.service";
 })
 export class PredictService {
 
-  private static readonly TOP_N_PREDICTIONS: number = 5;
-  private static readonly DIGIT_FRACTIONS: number = 3;
+  private static readonly TOP_N_PREDICTIONS: number = 3;
+
+  private predictionSource = new Subject<Predictions[]>();
+  public predictionObservable = this.predictionSource.asObservable();
 
   private serializedModel?: string;
   private selectedChannels?: number[];
@@ -28,10 +31,13 @@ export class PredictService {
     })
   }
 
-  predict(): Promise<Predictions[]> {
+  predict(): Promise<void> {
     return this.tensorService.convertToPredictTensors(this.selectedChannels!)
       .then(tensor => this.predictWithWorker(new SerializedTensor(tensor)))
-      .then(predictionTensor => this.initializePredictions(predictionTensor));
+      .then(predictionTensor => {
+        const predictions = this.initializePredictions(predictionTensor);
+        this.predictionSource.next(predictions);
+      });
   }
 
   private predictWithWorker(serializedTensor: SerializedTensor): Promise<Tensor2D> {
@@ -56,7 +62,7 @@ export class PredictService {
     const predictions: Predictions[] = []
     predictionTensor.unstack().forEach((predictionTensor: Tensor) => {
       const result = Array.from(predictionTensor.dataSync())
-        .map((p: number, i: number) => new Prediction(CLASS_NAMES[i], parseFloat(p.toFixed(PredictService.DIGIT_FRACTIONS))))
+        .map((p: number, i: number) => new Prediction(CLASS_NAMES[i], p))
         .sort((a: Prediction, b: Prediction) => b.probability - a.probability)
         .slice(0, PredictService.TOP_N_PREDICTIONS);
       predictions.push(new Predictions(result));

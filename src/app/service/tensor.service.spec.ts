@@ -39,37 +39,33 @@ describe('TensorService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('#initializeTensors should create tensors from ArrayBuffers',
-    (done: DoneFn) => {
+  it('#initializeTensors should create tensors from ArrayBuffers', (done: DoneFn) => {
+    const tensors: Tensor3D[] = [tensor_a, tensor_b]
+    const buffers = [buffer_a, buffer_b];
+    service.initializeTensors(buffers).then(ignored => {
+      expect((<any>service).tensors).toEqual(tensors);
+      done();
+    });
+  });
 
-      let tensors: Tensor3D[] = [tensor_a, tensor_b]
-      const buffers = [buffer_a, buffer_b];
+  it('#initializeTensors should emit the number of channels', (done: DoneFn) => {
+    const buffers = [buffer_a];
+    service.channelObservable.subscribe(numChannels => {
+      expect(numChannels).toBe(2);
+      done();
+    });
+    service.initializeTensors(buffers);
+  });
 
-      service.initializeTensors(buffers).then(ignored => {
-        expect((<any>service).tensors).toEqual(tensors);
+  it('#initializeTensors should throw error if number of channels not the same', (done: DoneFn) => {
+    const buffers = [buffer_a, buffer_b, buffer_c];
+    service.initializeTensors(buffers)
+      .then(ignored => done.fail('should never complete'))
+      .catch(error => {
+        expect(error).toEqual(new Error('Different channel numbers 2 and 3.'));
         done();
       });
-    });
-
-  it('#initializeTensors should return the number of channels',
-    (done: DoneFn) => {
-      const buffers = [buffer_a, buffer_b];
-      service.initializeTensors(buffers).then(num_channels => {
-        expect(num_channels).toBe(2);
-        done();
-      });
-    });
-
-  it('#initializeTensors should throw error if number of channels not the same',
-    (done: DoneFn) => {
-      const buffers = [buffer_a, buffer_b, buffer_c];
-      service.initializeTensors(buffers)
-        .then(ignored => done.fail('should never complete'))
-        .catch(error => {
-          expect(error).toEqual(new Error('Different channel numbers 2 and 3.'));
-          done();
-        });
-    });
+  });
 
   it('#initializeTensors should throw error if ArrayBuffers invalid',
     (done: DoneFn) => {

@@ -4,9 +4,8 @@ import {BrowserModule} from '@angular/platform-browser';
 import {AppComponent} from './app.component';
 import {ImageComponent} from './image/image.component';
 import {HttpClientModule} from "@angular/common/http";
-import {ModelComponent} from './model/model.component';
 import {AppConfigService} from "./service/app-config.service";
-import { PredictComponent } from './predict/predict.component';
+import {ControlComponent} from './control/control.component';
 
 const loadSettings = (appConfigService: AppConfigService) => {
   return () => appConfigService.load();
@@ -15,9 +14,8 @@ const loadSettings = (appConfigService: AppConfigService) => {
 @NgModule({
   declarations: [
     AppComponent,
-    ImageComponent,
-    ModelComponent,
-    PredictComponent
+    ControlComponent,
+    ImageComponent
   ],
   imports: [
     BrowserModule,

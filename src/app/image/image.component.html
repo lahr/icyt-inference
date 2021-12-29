@@ -1,10 +1,16 @@
 <div>
-  <button (click)="loadDemoImages()" [disabled]="disabled">Load demo images</button>
-</div>
-<div>
   <button *ngFor="let channel of channels" (mouseenter)="updateChannel(channel)"
           [ngClass]="{'channel-button': true, 'active': selectedChannels.includes(channel)}">{{channel}}</button>
 </div>
 <div>
-  <img *ngFor="let sample of visibleChannels" src="{{sample}}" width="100"/>
+  <div class="image-container" *ngFor="let channel of visibleChannels; let i = index">
+    <img src="{{channel}}" class="image"/>
+    <div *ngIf="predictions.length" class="overlay">
+      <ul>
+        <li *ngFor="let resultItem of predictions[i].predictions">
+          {{resultItem}}
+        </li>
+      </ul>
+    </div>
+  </div>
 </div>

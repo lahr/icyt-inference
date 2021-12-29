@@ -30,7 +30,7 @@ describe('PredictService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('#predict should return sorted predictions', (done: DoneFn) => {
+  it('#predict should emit sorted predictions', (done: DoneFn) => {
     const expedctedPredictions = [new Predictions([new Prediction('acer.platanoides', 1),
       new Prediction('acer.pseudoplatanus', 0.5), new Prediction('acer.negundo', 0)])];
     const predictionTensor: Tensor2D = tensor2d([[0, 1, 0.5]], [1, 3]);
@@ -39,12 +39,13 @@ describe('PredictService', () => {
     const tensorServiceCall = tensorServiceSpy.convertToPredictTensors.withArgs(selectedChannels).and.returnValue(Promise.resolve(mockTensor));
     const predictWithWorkerSpy = spyOn<any>(service, 'predictWithWorker').and.returnValue(Promise.resolve(predictionTensor));
 
-    service.predict().then((predictions: Predictions[]) => {
+    service.predictionObservable.subscribe(predictions => {
       expect(tensorServiceCall).toHaveBeenCalledTimes(1);
       expect(predictWithWorkerSpy).toHaveBeenCalledTimes(1);
       expect(predictions).toEqual(expedctedPredictions);
       done();
     });
+    service.predict();
   });
 
   it('#predict should reject if model is invalid', (done: DoneFn) => {

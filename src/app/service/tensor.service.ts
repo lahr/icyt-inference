@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
 import {browser, Tensor3D, Tensor4D} from "@tensorflow/tfjs";
 import {SerializedTensor} from "../domain/serialized-tensor";
+import {Subject} from "rxjs";
 
 @Injectable({
   providedIn: 'root'
@@ -9,6 +10,9 @@ export class TensorService {
 
   private numChannels: number = 0;
   private tensors: Tensor3D[] = [];
+
+  private channelSource = new Subject<number>();
+  public channelObservable = this.channelSource.asObservable();
 
   constructor() {
   }
@@ -22,18 +26,17 @@ export class TensorService {
         reject(new Error(e.message));
       };
     });
-
     worker.postMessage(imageBuffer);
     return result;
   }
 
-  async initializeTensors(imageBuffers: ArrayBuffer[]): Promise<number> {
+  async initializeTensors(imageBuffers: ArrayBuffer[]): Promise<void> {
     this.tensors = await Promise.all(imageBuffers.map(imageBuffer => TensorService.tiffToTensor(imageBuffer)));
     this.numChannels = this.tensors.flatMap((tensor: Tensor3D) => tensor.shape[2]).reduce((p: number, c: number) => {
       if (p != c) throw new Error(`Different channel numbers ${p} and ${c}.`);
       return c;
     });
-    return this.numChannels;
+    this.channelSource.next(this.numChannels);
   }
 
   convertToImageData(channelNr: number): Promise<ImageData>[] {
