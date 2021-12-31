@@ -1,5 +1,6 @@
 <div class="load-image">
   <button (click)="loadDemoImages($event)">Load demo images</button>
+  <div>{{loadStatus}}</div>
 </div>
 <div class="load-model">
   <button (click)="loadModel($event)">Load model</button>
@@ -7,4 +8,5 @@
 </div>
 <div class="predict">
   <button (click)="predict()" [disabled]="predictDisabled">Predict</button>
+  <div>{{predictStatus}}</div>
 </div>

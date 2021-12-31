@@ -2,8 +2,8 @@ import {Component, OnInit} from '@angular/core';
 import {TensorService} from "../service/tensor.service";
 import {ModelService} from "../service/model.service";
 import {PredictService} from "../service/predict.service";
-import {combineLatest, forkJoin, Observable} from "rxjs";
-import {HttpClient} from "@angular/common/http";
+import {combineLatest} from "rxjs";
+import {ImageService} from "../service/image.service";
 
 @Component({
   selector: 'app-control',
@@ -13,13 +13,15 @@ import {HttpClient} from "@angular/common/http";
 export class ControlComponent implements OnInit {
 
   modelName: string = 'f93937c';
+  loadStatus?: string;
   modelStatus?: string;
+  predictStatus?: string;
   predictDisabled: boolean = true;
 
-  constructor(private tensorService: TensorService,
+  constructor(private imageService: ImageService,
+              private tensorService: TensorService,
               private modelService: ModelService,
-              private predictService: PredictService,
-              private http: HttpClient) {
+              private predictService: PredictService) {
   }
 
   ngOnInit(): void {
@@ -30,23 +32,10 @@ export class ControlComponent implements OnInit {
 
   loadDemoImages(event: any): void {
     event.target.disabled = true;
-
-    const basePath = 'assets/demo/';
-    const images = ['demo-image-01-acer.pseudoplatanus.tif',
-      'demo-image-02-corylus.avellana.tif',
-      'demo-image-03-betula.pendula.tif',
-      'demo-image-04-quercus.robur.tif'];
-
-    forkJoin(
-      images.map(image => basePath + image)
-        .map(path => this.fetchImage(path)))
-      .subscribe(buffers => {
-        this.tensorService.initializeTensors(buffers);
-      });
-  }
-
-  private fetchImage(file: string): Observable<ArrayBuffer> {
-    return this.http.get(file, {responseType: 'arraybuffer'});
+    this.imageService.loadDemoImages()
+      .then(buffers => this.tensorService.initializeTensors(buffers))
+      .then(() => this.loadStatus = 'Demo images loaded')
+      .catch(error => this.loadStatus = error);
   }
 
   loadModel(event: any): void {
@@ -60,7 +49,7 @@ export class ControlComponent implements OnInit {
 
   predict(): void {
     this.predictDisabled = true;
-    this.predictService.predict();
+    this.predictService.predict().then(() => this.predictStatus = 'Images classified')
+      .catch(error => this.predictStatus = error);
   }
-
 }

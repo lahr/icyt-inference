@@ -4,16 +4,16 @@ import {ControlComponent} from './control.component';
 import {of, Subject, throwError} from "rxjs";
 import {ModelService} from "../service/model.service";
 import {PredictService} from "../service/predict.service";
-import {HttpClientTestingModule, HttpTestingController} from "@angular/common/http/testing";
-import {Type} from "@angular/core";
+import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {TensorService} from "../service/tensor.service";
 import {Predictions} from "../domain/predictions";
+import {ImageService} from "../service/image.service";
 
 describe('ControlComponent', () => {
   let component: ControlComponent;
   let fixture: ComponentFixture<ControlComponent>;
 
-  let httpMock: HttpTestingController;
+  let imageServiceSpy: jasmine.SpyObj<ImageService>;
   let tensorServiceSpy: jasmine.SpyObj<TensorService>;
   let modelServiceSpy: jasmine.SpyObj<ModelService>;
   let predictServiceSpy: jasmine.SpyObj<PredictService>;
@@ -39,14 +39,6 @@ describe('ControlComponent', () => {
     return findButtonWithCaption('Predict');
   }
 
-  function expectHttpCalls() {
-    httpMock.expectOne('assets/demo/demo-image-01-acer.pseudoplatanus.tif').flush(new ArrayBuffer(0));
-    httpMock.expectOne('assets/demo/demo-image-02-corylus.avellana.tif').flush(new ArrayBuffer(0));
-    httpMock.expectOne('assets/demo/demo-image-03-betula.pendula.tif').flush(new ArrayBuffer(0));
-    httpMock.expectOne('assets/demo/demo-image-04-quercus.robur.tif').flush(new ArrayBuffer(0));
-    httpMock.verify();
-  }
-
   beforeEach(async () => {
     channelSubject = new Subject<number>();
     const channelObservable = channelSubject.asObservable();
@@ -55,6 +47,7 @@ describe('ControlComponent', () => {
     modelSubject = new Subject<[string, number[]]>();
     const modelObservable = modelSubject.asObservable();
 
+    imageServiceSpy = jasmine.createSpyObj('ImageService', ['loadDemoImages']);
     tensorServiceSpy = jasmine.createSpyObj('TensorService', ['initializeTensors', 'convertToImageData'], {channelObservable: channelObservable});
     modelServiceSpy = jasmine.createSpyObj('ModelService', ['loadModel'], {modelObservable: modelObservable});
     predictServiceSpy = jasmine.createSpyObj('PredictService', ['predict'], {predictionObservable: predictionObservable});
@@ -63,6 +56,7 @@ describe('ControlComponent', () => {
       declarations: [ControlComponent],
       imports: [HttpClientTestingModule],
       providers: [
+        {provide: ImageService, useValue: imageServiceSpy},
         {provide: TensorService, useValue: tensorServiceSpy},
         {provide: ModelService, useValue: modelServiceSpy},
         {provide: PredictService, useValue: predictServiceSpy}]
@@ -72,7 +66,6 @@ describe('ControlComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(ControlComponent);
     component = fixture.componentInstance;
-    httpMock = fixture.debugElement.injector.get<HttpTestingController>(HttpTestingController as Type<HttpTestingController>);
     fixture.detectChanges();
   });
 
@@ -87,11 +80,25 @@ describe('ControlComponent', () => {
     expect(getLoadDemoImagesButton().disabled).toBeTrue();
   });
 
-  it('#loadDemoImages should fetch images and query TensorService', () => {
+  it('#loadDemoImages should query ImageService', fakeAsync(() => {
+    const loadCall = imageServiceSpy.loadDemoImages.and.returnValue(Promise.resolve([new ArrayBuffer(0)]))
     component.loadDemoImages({target: {disabled: false}});
-    expectHttpCalls();
+    expect(loadCall).toHaveBeenCalledTimes(1);
+    tick();
     expect(tensorServiceSpy.initializeTensors).toHaveBeenCalledTimes(1);
-  });
+  }));
+
+  it('#loadDemoImages should display error when failed', fakeAsync(() => {
+    const expectedMessage = 'err';
+    const loadCall = imageServiceSpy.loadDemoImages.and.callFake(() => Promise.reject(expectedMessage));
+    component.loadDemoImages({target: {disabled: false}});
+    expect(loadCall).toHaveBeenCalledTimes(1);
+    tick();
+    fixture.detectChanges();
+    expect(tensorServiceSpy.initializeTensors).not.toHaveBeenCalled();
+    const status = fixture.nativeElement.querySelector('.load-image div');
+    expect(status.textContent).toBe(expectedMessage);
+  }));
 
   it('should display that model has been successfully loaded', () => {
     const dummyValue = 1;
@@ -142,10 +149,27 @@ describe('ControlComponent', () => {
     channelSubject.next(2);
     modelSubject.next(['model', [1]]);
 
-    fixture.detectChanges()
+    fixture.detectChanges();
     expect(getPredictButton().disabled).toBeFalse()
     getPredictButton().click();
     fixture.detectChanges();
     expect(getPredictButton().disabled).toBeTrue();
   });
+
+  it('#predict should query PredictService', () => {
+    const predictCall = predictServiceSpy.predict.and.returnValue(Promise.resolve());
+    component.predict();
+    expect(predictCall).toHaveBeenCalledTimes(1);
+  });
+
+  it('#predict should display error when failed', fakeAsync(() => {
+    const expectedMessage = 'err';
+    const predictCall = predictServiceSpy.predict.and.callFake(() => Promise.reject(expectedMessage));
+    component.predict();
+    expect(predictCall).toHaveBeenCalledTimes(1);
+    tick();
+    fixture.detectChanges();
+    const status = fixture.nativeElement.querySelector('.predict div');
+    expect(status.textContent).toBe(expectedMessage);
+  }));
 });
