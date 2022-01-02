@@ -26,6 +26,22 @@ describe('ImageService', () => {
     expect(service).toBeTruthy();
   });
 
+  it('should load images', (done: DoneFn) => {
+    service.loadImages([new File([buffer2], 'test1.tiff'), new File([buffer3], 'test2.tiff')]).then(res => {
+      expect(res).toEqual([buffer2, buffer3]);
+      done();
+    });
+  });
+
+  it('should reject files with wrong file suffix', (done: DoneFn) => {
+    service.loadImages([new File([buffer2], 'test1.tiff'), new File([buffer3], 'test2.txt')])
+      .then(ignored => done.fail('should not complete'))
+      .catch(reason => {
+        expect(reason).toEqual('Not a .tif, .tiff file: test2.txt');
+        done();
+      });
+  });
+
   it('should load demo images', (done: DoneFn) => {
     service.loadDemoImages().then(res => {
       expect(res).toEqual([buffer1, buffer2, buffer3, buffer4]);
@@ -33,4 +49,5 @@ describe('ImageService', () => {
     });
     expectHttpCalls();
   });
-});
+})
+;

@@ -7,7 +7,18 @@ import {HttpClient} from "@angular/common/http";
 })
 export class ImageService {
 
+  private static readonly ALLOWED_FILE_SUFFIXES: string[] = ['tif', 'tiff'];
+
   constructor(private http: HttpClient) {
+  }
+
+  loadImages(files: Array<File>): Promise<ArrayBuffer[]> {
+    return Promise.all(files.map(file => {
+      if (!ImageService.ALLOWED_FILE_SUFFIXES.includes(file.name.split('.').pop() || file.name)) {
+        return Promise.reject(`Not a ${ImageService.ALLOWED_FILE_SUFFIXES.map(suffix => '.' + suffix).join(', ')} file: ${file.name}`);
+      }
+      return file.arrayBuffer();
+    }));
   }
 
   loadDemoImages(): Promise<ArrayBuffer[]> {

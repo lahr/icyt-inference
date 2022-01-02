@@ -27,6 +27,10 @@ describe('ControlComponent', () => {
       .query(debugEl => debugEl.name === 'button' && debugEl.nativeElement.textContent === caption).nativeElement;
   }
 
+  function getLoadImagesButton() {
+    return findButtonWithCaption('Upload images');
+  }
+
   function getLoadDemoImagesButton() {
     return findButtonWithCaption('Load demo images');
   }
@@ -47,7 +51,7 @@ describe('ControlComponent', () => {
     modelSubject = new Subject<[string, number[]]>();
     const modelObservable = modelSubject.asObservable();
 
-    imageServiceSpy = jasmine.createSpyObj('ImageService', ['loadDemoImages']);
+    imageServiceSpy = jasmine.createSpyObj('ImageService', ['loadImages', 'loadDemoImages']);
     tensorServiceSpy = jasmine.createSpyObj('TensorService', ['initializeTensors', 'convertToImageData'], {channelObservable: channelObservable});
     modelServiceSpy = jasmine.createSpyObj('ModelService', ['loadModel'], {modelObservable: modelObservable});
     predictServiceSpy = jasmine.createSpyObj('PredictService', ['predict'], {predictionObservable: predictionObservable});
@@ -81,8 +85,8 @@ describe('ControlComponent', () => {
   });
 
   it('#loadDemoImages should query ImageService', fakeAsync(() => {
-    const loadCall = imageServiceSpy.loadDemoImages.and.returnValue(Promise.resolve([new ArrayBuffer(0)]))
-    component.loadDemoImages({target: {disabled: false}});
+    const loadCall = imageServiceSpy.loadDemoImages.and.returnValue(Promise.resolve([new ArrayBuffer(0)]));
+    component.loadDemoImages();
     expect(loadCall).toHaveBeenCalledTimes(1);
     tick();
     expect(tensorServiceSpy.initializeTensors).toHaveBeenCalledTimes(1);
@@ -91,13 +95,39 @@ describe('ControlComponent', () => {
   it('#loadDemoImages should display error when failed', fakeAsync(() => {
     const expectedMessage = 'err';
     const loadCall = imageServiceSpy.loadDemoImages.and.callFake(() => Promise.reject(expectedMessage));
-    component.loadDemoImages({target: {disabled: false}});
+    component.loadDemoImages();
     expect(loadCall).toHaveBeenCalledTimes(1);
     tick();
     fixture.detectChanges();
     expect(tensorServiceSpy.initializeTensors).not.toHaveBeenCalled();
     const status = fixture.nativeElement.querySelector('.load-image div');
     expect(status.textContent).toBe(expectedMessage);
+  }));
+
+  it('#loadImages should display success message on success', fakeAsync(() => {
+    const expectedMessage = "Images loaded";
+    const loadCall = imageServiceSpy.loadImages.and.returnValue(Promise.resolve([new ArrayBuffer(0)]));
+    component.loadImages({target: {files: []}});
+    expect(loadCall).toHaveBeenCalledTimes(1);
+    tick();
+    fixture.detectChanges();
+    expect(tensorServiceSpy.initializeTensors).toHaveBeenCalledTimes(1);
+    const status = fixture.nativeElement.querySelector('.load-image div');
+    expect(status.textContent).toBe(expectedMessage);
+  }));
+
+  it('#loadImages should display error and enable buttons when failed', fakeAsync(() => {
+    const expectedMessage = "err";
+    const loadCall = imageServiceSpy.loadImages.and.callFake(() => Promise.reject(expectedMessage));
+    component.loadImages({target: {files: []}});
+    expect(loadCall).toHaveBeenCalledTimes(1);
+    tick();
+    fixture.detectChanges();
+    expect(tensorServiceSpy.initializeTensors).not.toHaveBeenCalled();
+    const status = fixture.nativeElement.querySelector('.load-image div');
+    expect(status.textContent).toBe(expectedMessage);
+    expect(getLoadImagesButton().disabled).toBeFalse();
+    expect(getLoadDemoImagesButton().disabled).toBeFalse();
   }));
 
   it('should display that model has been successfully loaded', () => {

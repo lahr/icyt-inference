@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {TensorService} from "../service/tensor.service";
 import {ModelService} from "../service/model.service";
 import {PredictService} from "../service/predict.service";
@@ -17,6 +17,9 @@ export class ControlComponent implements OnInit {
   modelStatus?: string;
   predictStatus?: string;
   predictDisabled: boolean = true;
+  loadImagesDisabled: boolean = false;
+
+  @ViewChild('upload') uploadElement!: ElementRef;
 
   constructor(private imageService: ImageService,
               private tensorService: TensorService,
@@ -30,12 +33,29 @@ export class ControlComponent implements OnInit {
     });
   }
 
-  loadDemoImages(event: any): void {
-    event.target.disabled = true;
+  loadImages(event: any): void {
+    this.loadImagesDisabled = true;
+    const files: Array<File> = Array.from(event.target.files);
+    this.imageService.loadImages(files)
+      .then(buffers => this.tensorService.initializeTensors(buffers))
+      .then(() => this.loadStatus = 'Images loaded')
+      .catch(error => {
+        this.loadStatus = error;
+        this.loadImagesDisabled = false;
+      }).finally(() =>
+      this.uploadElement.nativeElement.value = '' //reset input
+    );
+  }
+
+  loadDemoImages(): void {
+    this.loadImagesDisabled = true;
     this.imageService.loadDemoImages()
       .then(buffers => this.tensorService.initializeTensors(buffers))
       .then(() => this.loadStatus = 'Demo images loaded')
-      .catch(error => this.loadStatus = error);
+      .catch(error => {
+        this.loadStatus = error;
+        this.loadImagesDisabled = false;
+      });
   }
 
   loadModel(event: any): void {

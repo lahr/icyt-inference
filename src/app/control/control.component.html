@@ -1,5 +1,8 @@
 <div class="load-image">
-  <button (click)="loadDemoImages($event)">Load demo images</button>
+  <button (click)="upload.click()" [disabled]="loadImagesDisabled">Upload images</button>
+  <input hidden #upload type="file" (change)="loadImages($event)" multiple/>
+  - or -
+  <button (click)="loadDemoImages()" [disabled]="loadImagesDisabled">Load demo images</button>
   <div>{{loadStatus}}</div>
 </div>
 <div class="load-model">

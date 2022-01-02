@@ -31,11 +31,12 @@ export class TensorService {
   }
 
   async initializeTensors(imageBuffers: ArrayBuffer[]): Promise<void> {
-    this.tensors = await Promise.all(imageBuffers.map(imageBuffer => TensorService.tiffToTensor(imageBuffer)));
-    this.numChannels = this.tensors.flatMap((tensor: Tensor3D) => tensor.shape[2]).reduce((p: number, c: number) => {
+    const tensors = await Promise.all(imageBuffers.map(imageBuffer => TensorService.tiffToTensor(imageBuffer)));
+    this.numChannels = tensors.flatMap((tensor: Tensor3D) => tensor.shape[2]).reduce((p: number, c: number) => {
       if (p != c) throw new Error(`Different channel numbers ${p} and ${c}.`);
       return c;
     });
+    this.tensors = tensors;
     this.channelSource.next(this.numChannels);
   }
 
