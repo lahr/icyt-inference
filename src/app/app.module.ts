@@ -6,6 +6,10 @@ import {ImageComponent} from './image/image.component';
 import {HttpClientModule} from "@angular/common/http";
 import {AppConfigService} from "./service/app-config.service";
 import {ControlComponent} from './control/control.component';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
+import {MatButtonToggleModule} from "@angular/material/button-toggle";
+import {MatButtonModule} from "@angular/material/button";
 
 const loadSettings = (appConfigService: AppConfigService) => {
   return () => appConfigService.load();
@@ -19,7 +23,11 @@ const loadSettings = (appConfigService: AppConfigService) => {
   ],
   imports: [
     BrowserModule,
-    HttpClientModule
+    HttpClientModule,
+    BrowserAnimationsModule,
+    MatProgressSpinnerModule,
+    MatButtonToggleModule,
+    MatButtonModule
   ],
   providers: [
     AppConfigService,

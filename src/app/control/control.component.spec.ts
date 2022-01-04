@@ -1,17 +1,24 @@
 import {ComponentFixture, fakeAsync, TestBed, tick} from '@angular/core/testing';
 
 import {ControlComponent} from './control.component';
-import {of, Subject, throwError} from "rxjs";
+import {Subject, throwError} from "rxjs";
 import {ModelService} from "../service/model.service";
 import {PredictService} from "../service/predict.service";
 import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {TensorService} from "../service/tensor.service";
 import {Predictions} from "../domain/predictions";
 import {ImageService} from "../service/image.service";
+import {HarnessLoader} from "@angular/cdk/testing";
+import {TestbedHarnessEnvironment} from "@angular/cdk/testing/testbed";
+import {MatButtonModule} from "@angular/material/button";
+import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
+import {MatProgressSpinnerHarness} from "@angular/material/progress-spinner/testing";
+import {MatButtonHarness} from "@angular/material/button/testing";
 
 describe('ControlComponent', () => {
   let component: ControlComponent;
   let fixture: ComponentFixture<ControlComponent>;
+  let loader: HarnessLoader;
 
   let imageServiceSpy: jasmine.SpyObj<ImageService>;
   let tensorServiceSpy: jasmine.SpyObj<TensorService>;
@@ -22,9 +29,13 @@ describe('ControlComponent', () => {
   let modelSubject: Subject<[string, number[]]>;
   let predictionSubject: Subject<Predictions[]>;
 
+  function findSpinnerWithinParent(selector: string) {
+    return loader.getChildLoader(selector)
+      .then(childLoader => childLoader.getHarness(MatProgressSpinnerHarness));
+  }
+
   function findButtonWithCaption(caption: string) {
-    return fixture.debugElement
-      .query(debugEl => debugEl.name === 'button' && debugEl.nativeElement.textContent === caption).nativeElement;
+    return loader.getHarness(MatButtonHarness.with({text: caption}));
   }
 
   function getLoadImagesButton() {
@@ -58,7 +69,7 @@ describe('ControlComponent', () => {
 
     await TestBed.configureTestingModule({
       declarations: [ControlComponent],
-      imports: [HttpClientTestingModule],
+      imports: [HttpClientTestingModule, MatButtonModule, MatProgressSpinnerModule],
       providers: [
         {provide: ImageService, useValue: imageServiceSpy},
         {provide: TensorService, useValue: tensorServiceSpy},
@@ -69,19 +80,21 @@ describe('ControlComponent', () => {
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ControlComponent);
+    loader = TestbedHarnessEnvironment.loader(fixture);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
 
-  it('load demo images button should be enabled', () => {
-    expect(getLoadDemoImagesButton().disabled).toBeFalse();
+  it('load demo images button should be enabled', async () => {
+    const loadImagesButton = await getLoadDemoImagesButton();
+    expect(await loadImagesButton.isDisabled()).toBeFalse();
   });
 
-  it('should disable load demo images button when clicked', () => {
-    expect(getLoadDemoImagesButton().disabled).toBeFalse();
-    getLoadDemoImagesButton().click();
-    fixture.detectChanges();
-    expect(getLoadDemoImagesButton().disabled).toBeTrue();
+  it('should disable load demo images button when clicked', async () => {
+    const loadDemoImagesButton = await getLoadDemoImagesButton();
+    expect(await loadDemoImagesButton.isDisabled()).toBeFalse();
+    await loadDemoImagesButton.click();
+    expect(await loadDemoImagesButton.isDisabled()).toBeTrue();
   });
 
   it('#loadDemoImages should query ImageService', fakeAsync(() => {
@@ -93,6 +106,7 @@ describe('ControlComponent', () => {
   }));
 
   it('#loadDemoImages should display error when failed', fakeAsync(() => {
+    spyOn(window, 'alert');
     const expectedMessage = 'err';
     const loadCall = imageServiceSpy.loadDemoImages.and.callFake(() => Promise.reject(expectedMessage));
     component.loadDemoImages();
@@ -100,23 +114,23 @@ describe('ControlComponent', () => {
     tick();
     fixture.detectChanges();
     expect(tensorServiceSpy.initializeTensors).not.toHaveBeenCalled();
-    const status = fixture.nativeElement.querySelector('.load-image div');
-    expect(status.textContent).toBe(expectedMessage);
+    expect(window.alert).toHaveBeenCalledWith(expectedMessage);
   }));
 
-  it('#loadImages should display success message on success', fakeAsync(() => {
-    const expectedMessage = "Images loaded";
+  it('#loadImages should hide progress spinner on success', async () => {
+    const spinner = await findSpinnerWithinParent('.load-image');
+    const spinnerHost = await spinner.host();
     const loadCall = imageServiceSpy.loadImages.and.returnValue(Promise.resolve([new ArrayBuffer(0)]));
+    expect(await spinnerHost.getCssValue('visibility')).toBe('hidden');
     component.loadImages({target: {files: []}});
+    expect(await spinnerHost.getCssValue('visibility')).toBe('visible');
     expect(loadCall).toHaveBeenCalledTimes(1);
-    tick();
-    fixture.detectChanges();
     expect(tensorServiceSpy.initializeTensors).toHaveBeenCalledTimes(1);
-    const status = fixture.nativeElement.querySelector('.load-image div');
-    expect(status.textContent).toBe(expectedMessage);
-  }));
+    expect(await spinnerHost.getCssValue('visibility')).toBe('hidden');
+  });
 
-  it('#loadImages should display error and enable buttons when failed', fakeAsync(() => {
+  it('#loadImages should display error and enable buttons when failed', fakeAsync(async () => {
+    spyOn(window, 'alert');
     const expectedMessage = "err";
     const loadCall = imageServiceSpy.loadImages.and.callFake(() => Promise.reject(expectedMessage));
     component.loadImages({target: {files: []}});
@@ -124,66 +138,73 @@ describe('ControlComponent', () => {
     tick();
     fixture.detectChanges();
     expect(tensorServiceSpy.initializeTensors).not.toHaveBeenCalled();
-    const status = fixture.nativeElement.querySelector('.load-image div');
-    expect(status.textContent).toBe(expectedMessage);
-    expect(getLoadImagesButton().disabled).toBeFalse();
-    expect(getLoadDemoImagesButton().disabled).toBeFalse();
+    expect(window.alert).toHaveBeenCalledWith(expectedMessage);
+    const loadImagesButton = await getLoadImagesButton();
+    expect(await loadImagesButton.isDisabled()).toBeFalse();
+    const loadDemoImagesButton = await getLoadDemoImagesButton();
+    expect(await loadDemoImagesButton.isDisabled()).toBeFalse();
   }));
 
-  it('should display that model has been successfully loaded', () => {
-    const dummyValue = 1;
-    const modelServiceCall = modelServiceSpy.loadModel.and.returnValue(of(dummyValue))
-    getLoadModelButton().click();
-    expect(modelServiceCall.calls.count()).toBe(1);
-    fixture.detectChanges()
-    const statusField = fixture.debugElement
-      .query(debugEl => debugEl.nativeElement.id === 'model-progress').nativeElement;
-    expect(statusField.textContent).toBe('Model \'f93937c\' loaded')
+  it('should hide progress spinner when model was loaded successfully', async () => {
+    const spinner = await findSpinnerWithinParent('.load-model');
+    const spinnerHost = await spinner.host();
+    const subj = new Subject<number>();
+    const obs = subj.asObservable();
+    const modelServiceCall = modelServiceSpy.loadModel.and.returnValue(obs);
+    expect(await spinnerHost.getCssValue('visibility')).toBe('hidden');
+    component.loadModel();
+    expect(await spinnerHost.getCssValue('visibility')).toBe('visible');
+    subj.next(1);
+    subj.next(100);
+    expect(modelServiceCall).toHaveBeenCalledTimes(1);
+    subj.complete();
+    expect(await spinnerHost.getCssValue('visibility')).toBe('hidden');
   });
 
-  it('should show an error if model cannot be loaded', () => {
+  it('should show an error if model cannot be loaded', async () => {
+    spyOn(window, 'alert');
     const error404 = 'Error 404'
     const spyAnd = modelServiceSpy.loadModel.and.returnValue(throwError(() => error404))
-    getLoadModelButton().click();
+    const loadModelButton = await getLoadModelButton();
+    await loadModelButton.click();
     expect(spyAnd.calls.count()).toBe(1);
     fixture.detectChanges()
-    const statusField = fixture.debugElement
-      .query(debugEl => debugEl.nativeElement.id === 'model-progress').nativeElement;
-    expect(statusField.textContent).toBe(error404)
+    expect(window.alert).toHaveBeenCalledOnceWith(error404);
   });
 
-  it('predict button should be enabled when tensors and model initialized', () => {
+  it('predict button should be enabled when tensors and model initialized', async () => {
     channelSubject.next(2);
     modelSubject.next(['model', [1]]);
-    fixture.detectChanges()
-    expect(getPredictButton().disabled).toBeFalse();
+    const predictButton = await getPredictButton();
+    expect(await predictButton.isDisabled()).toBeFalse();
   });
 
-  it('predict button should be disabled when model not initialized', () => {
+  it('predict button should be disabled when model not initialized', async () => {
     channelSubject.next(2);
-    fixture.detectChanges();
-    expect(getPredictButton().disabled).toBeTrue();
+    const predictButton = await getPredictButton();
+    expect(await predictButton.isDisabled()).toBeTrue();
   });
 
-  it('predict button should be disabled when tensors not initialized', () => {
+  it('predict button should be disabled when tensors not initialized', async () => {
     modelSubject.next(['model', [1]]);
-    fixture.detectChanges();
-    expect(getPredictButton().disabled).toBeTrue();
+    const predictButton = await getPredictButton();
+    expect(await predictButton.isDisabled()).toBeTrue();
   });
 
-  it('predict button should be disabled when tensor and model not initialized', () => {
-    expect(getPredictButton().disabled).toBeTrue();
+  it('predict button should be disabled when tensor and model not initialized', async () => {
+    const predictButton = await getPredictButton();
+    expect(await predictButton.isDisabled()).toBeTrue();
   });
 
-  it('should disable predict button when clicked', () => {
+  it('should disable predict button when clicked', async () => {
     channelSubject.next(2);
     modelSubject.next(['model', [1]]);
 
     fixture.detectChanges();
-    expect(getPredictButton().disabled).toBeFalse()
-    getPredictButton().click();
-    fixture.detectChanges();
-    expect(getPredictButton().disabled).toBeTrue();
+    const predictButton = await getPredictButton();
+    expect(await predictButton.isDisabled()).toBeFalse();
+    await predictButton.click();
+    expect(await predictButton.isDisabled()).toBeTrue();
   });
 
   it('#predict should query PredictService', () => {
@@ -193,13 +214,13 @@ describe('ControlComponent', () => {
   });
 
   it('#predict should display error when failed', fakeAsync(() => {
+    spyOn(window, 'alert');
     const expectedMessage = 'err';
     const predictCall = predictServiceSpy.predict.and.callFake(() => Promise.reject(expectedMessage));
     component.predict();
     expect(predictCall).toHaveBeenCalledTimes(1);
     tick();
     fixture.detectChanges();
-    const status = fixture.nativeElement.querySelector('.predict div');
-    expect(status.textContent).toBe(expectedMessage);
+    expect(window.alert).toHaveBeenCalledOnceWith(expectedMessage);
   }));
 });

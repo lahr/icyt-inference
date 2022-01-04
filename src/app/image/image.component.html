@@ -1,6 +1,9 @@
-<div>
-  <button *ngFor="let channel of channels" (mouseenter)="updateChannel(channel)"
-          [ngClass]="{'channel-button': true, 'active': selectedChannels.includes(channel)}">{{channel}}</button>
+<div class="channel-buttons">
+  <mat-button-toggle-group *ngIf="channels.length > 0" disabled multiple>
+    <mat-button-toggle *ngFor="let channel of channels" (mouseenter)="updateChannel(channel)"
+                       [checked]="selectedChannels.includes(channel)"
+                       class="channel-button">{{channel}}</mat-button-toggle>
+  </mat-button-toggle-group>
 </div>
 <div>
   <div class="image-container" *ngFor="let channel of visibleChannels; let i = index">

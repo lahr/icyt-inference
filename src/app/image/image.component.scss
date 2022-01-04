@@ -1,11 +1,15 @@
-button.active {
-  background-color: #999;
+.channel-buttons {
+  margin: 0 0 10px 0;
+}
+
+.channel-button {
+  color: rgba(0, 0, 0, .87);
 }
 
 .image-container {
   position: relative;
   display: inline-block;
-  width:200px;
+  width: 200px;
 }
 
 .image {
@@ -23,6 +27,7 @@ button.active {
   color: #f1f1f1;
   margin: 0;
   padding: 5px;
+  font-size: 13px;
 }
 
 .overlay ul {

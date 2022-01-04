@@ -1,6 +1,6 @@
 import {ComponentFixture, fakeAsync, TestBed, tick} from '@angular/core/testing';
 import {ImageComponent} from './image.component';
-import {of, Subject} from "rxjs";
+import {Subject} from "rxjs";
 import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {TensorService} from "../service/tensor.service";
 import {By} from "@angular/platform-browser";
@@ -8,6 +8,10 @@ import {ModelService} from "../service/model.service";
 import {PredictService} from "../service/predict.service";
 import {Predictions} from "../domain/predictions";
 import {Prediction} from "../domain/prediction";
+import {HarnessLoader} from "@angular/cdk/testing";
+import {TestbedHarnessEnvironment} from "@angular/cdk/testing/testbed";
+import {MatButtonToggleHarness} from "@angular/material/button-toggle/testing";
+import {MatButtonToggleModule} from "@angular/material/button-toggle";
 
 describe('ImageComponent', () => {
   let component: ImageComponent;
@@ -22,10 +26,10 @@ describe('ImageComponent', () => {
   let channelSubject: Subject<number>;
   let modelSubject: Subject<[string, number[]]>;
   let predictionSubject: Subject<Predictions[]>;
+  let loader: HarnessLoader;
 
-  function findButtonWithCaption(caption: string) {
-    return fixture.debugElement
-      .query(debugEl => debugEl.name === 'button' && debugEl.nativeElement.textContent === caption).nativeElement;
+  function findChannelButtonWithCaption(caption: string) {
+    return loader.getHarness(MatButtonToggleHarness.with({text: caption}));
   }
 
   beforeEach(async () => {
@@ -42,7 +46,7 @@ describe('ImageComponent', () => {
 
     await TestBed.configureTestingModule({
       declarations: [ImageComponent],
-      imports: [HttpClientTestingModule],
+      imports: [HttpClientTestingModule, MatButtonToggleModule],
       providers: [{provide: TensorService, useValue: tensorServiceSpy},
         {provide: ModelService, useValue: modelServiceSpy},
         {provide: PredictService, useValue: predictServiceSpy}]
@@ -51,6 +55,7 @@ describe('ImageComponent', () => {
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ImageComponent);
+    loader = TestbedHarnessEnvironment.loader(fixture);
     component = fixture.componentInstance;
     fixture.detectChanges();
   })
@@ -84,7 +89,7 @@ describe('ImageComponent', () => {
     expect(img.src).toBe(mockImageDataChannel1Base64);
   }));
 
-  it('should switch channel onmouseenter', fakeAsync(() => {
+  it('should switch channel onmouseenter', fakeAsync(async () => {
     const convertCall = tensorServiceSpy.convertToImageData.withArgs(1).and.returnValue([Promise.resolve(mockImageDataChannel1)])
     channelSubject.next(2);
     expect(convertCall).toHaveBeenCalledTimes(1);
@@ -95,7 +100,11 @@ describe('ImageComponent', () => {
     expect(img.src).toBe(mockImageDataChannel1Base64);
 
     const spyCallConvertToImageData2 = tensorServiceSpy.convertToImageData.withArgs(2).and.returnValue([Promise.resolve(mockImageDataChannel2)])
-    findButtonWithCaption('2').dispatchEvent(new Event('mouseenter'));
+
+    const button2 = await findChannelButtonWithCaption('2');
+    const button2Host = await button2.host();
+    await button2Host.dispatchEvent('mouseenter');
+
     tick();
     fixture.detectChanges();
     expect(spyCallConvertToImageData2).toHaveBeenCalled();
@@ -104,20 +113,21 @@ describe('ImageComponent', () => {
     expect(img.src).toBe(mockImageDataChannel2Base64);
   }));
 
-  it('should highlight channel buttons that are used for inference', fakeAsync(() => {
+  it('should highlight channel buttons that are used for inference', fakeAsync(async () => {
     tensorServiceSpy.convertToImageData.withArgs(1).and.returnValue([Promise.resolve(mockImageDataChannel1)])
     channelSubject.next(2);
     modelSubject.next(['modelStr', [2]]);
     tick();
     fixture.detectChanges();
 
-    const channelButton1 = findButtonWithCaption('1');
-    expect(channelButton1.classList.contains('active')).toBeFalse();
-    const channelButton2 = findButtonWithCaption('2');
-    expect(channelButton2.classList.contains('active')).toBeTrue();
+    const button1 = await findChannelButtonWithCaption('1');
+    expect(await button1.isChecked()).toBeFalse();
+
+    const button2 = await findChannelButtonWithCaption('2');
+    expect(await button2.isChecked()).toBeTrue();
   }));
 
-  it('should show predicitions', fakeAsync(() => {
+  it('should show predictions', fakeAsync(() => {
     tensorServiceSpy.convertToImageData.withArgs(1).and.returnValue([Promise.resolve(mockImageDataChannel1)])
     channelSubject.next(2);
     predictionSubject.next([new Predictions([new Prediction('B', 0.5), new Prediction('A', 0.3)])])

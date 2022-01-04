@@ -1,15 +1,19 @@
 <div class="load-image">
-  <button (click)="upload.click()" [disabled]="loadImagesDisabled">Upload images</button>
+  <button mat-stroked-button (click)="upload.click()" [disabled]="loadImagesDisabled">Upload images</button>
   <input hidden #upload type="file" (change)="loadImages($event)" multiple/>
-  - or -
-  <button (click)="loadDemoImages()" [disabled]="loadImagesDisabled">Load demo images</button>
-  <div>{{loadStatus}}</div>
+  <span>- or -</span>
+  <button mat-stroked-button (click)="loadDemoImages()" [disabled]="loadImagesDisabled">Load demo images</button>
+  <mat-progress-spinner mode="indeterminate" [ngStyle]="{'visibility': loadImagesInProgress ? 'visible' : 'hidden'}"
+                        [diameter]="20"></mat-progress-spinner>
 </div>
 <div class="load-model">
-  <button (click)="loadModel($event)">Load model</button>
-  <div id="model-progress">{{modelStatus}}</div>
+  <button mat-stroked-button (click)="loadModel()" [disabled]="loadModelDisabled">Load model</button>
+  <mat-progress-spinner [ngStyle]="{'visibility': loadModelInProgress ? 'visible' : 'hidden'}"
+                        [mode]="loadModelSpinnerMode" [value]="loadModelSpinnerValue"
+                        [diameter]="20"></mat-progress-spinner>
 </div>
 <div class="predict">
-  <button (click)="predict()" [disabled]="predictDisabled">Predict</button>
-  <div>{{predictStatus}}</div>
+  <button mat-stroked-button (click)="predict()" [disabled]="predictDisabled">Predict</button>
+  <mat-progress-spinner mode="indeterminate" [ngStyle]="{'visibility': predictInProgress ? 'visible' : 'hidden'}"
+                        [diameter]="20"></mat-progress-spinner>
 </div>
