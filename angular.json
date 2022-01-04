@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "icyt-tfjs": {
+    "icyt-inference": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -20,7 +20,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/icyt-tfjs",
+            "outputPath": "dist/icyt-inference",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
@@ -78,10 +78,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "icyt-tfjs:build:production"
+              "browserTarget": "icyt-inference:build:production"
             },
             "development": {
-              "browserTarget": "icyt-tfjs:build:development"
+              "browserTarget": "icyt-inference:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -89,7 +89,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "icyt-tfjs:build"
+            "browserTarget": "icyt-inference:build"
           }
         },
         "test": {
@@ -130,7 +130,7 @@
       }
     }
   },
-  "defaultProject": "icyt-tfjs",
+  "defaultProject": "icyt-inference",
   "cli": {
     "defaultCollection": "@angular-eslint/schematics"
   }

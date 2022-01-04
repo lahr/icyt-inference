@@ -18,9 +18,9 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should contain 'icyt-tfjs' in title`, () => {
+  it(`should contain 'iCyt Inference' in title`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toContain('icyt-tfjs');
+    expect(app.title).toContain('iCyt Inference');
   });
 });
