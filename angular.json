@@ -97,7 +97,7 @@
           "options": {
             "fileReplacements": [{
               "replace": "src/assets/app-config.json",
-              "with": "src/assets/app-config-test.json"
+              "with": "src/assets-test/app-config.json"
             }],
             "main": "src/test.ts",
             "polyfills": "src/polyfills.ts",

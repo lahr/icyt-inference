@@ -28,8 +28,8 @@ module.exports = function (config) {
       dir: require('path').join(__dirname, './coverage/icyt-inference'),
       subdir: '.',
       reporters: [
-        { type: 'html' },
-        { type: 'text-summary' }
+        {type: 'html'},
+        {type: 'text-summary'}
       ]
     },
     reporters: ['progress', 'kjhtml'],
@@ -38,6 +38,12 @@ module.exports = function (config) {
     logLevel: config.LOG_INFO,
     autoWatch: true,
     browsers: ['Chrome'],
+    customLaunchers: {
+      ChromeHeadlessCI: {
+        base: 'ChromeHeadless',
+        flags: ['--no-sandbox']
+      }
+    },
     singleRun: false,
     restartOnFileChange: true
   });

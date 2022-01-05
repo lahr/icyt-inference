@@ -50,7 +50,5 @@ Thumbs.db
 *.iml
 
 # Configuration
-src/assets/app-config.json
-
 src/assets/models/*
 !src/assets/models/.gitkeep
