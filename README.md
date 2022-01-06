@@ -1,4 +1,5 @@
 [![Unit tests](https://github.com/lahr/icyt-inference/actions/workflows/main.yml/badge.svg)](https://github.com/lahr/icyt-inference/actions)
+[![codecov](https://codecov.io/gh/lahr/icyt-inference/branch/main/graph/badge.svg?token=ER8VUK91DK)](https://codecov.io/gh/lahr/icyt-inference)
 
 # iCyt Inference
 
