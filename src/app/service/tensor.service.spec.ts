@@ -3,7 +3,7 @@ import {TestBed} from '@angular/core/testing';
 import * as base64 from 'base64-arraybuffer'
 
 import {TensorService} from './tensor.service';
-import {ENV, getBackend, round, scalar, tensor3d} from "@tensorflow/tfjs";
+import {ENV, getBackend, tensor3d} from "@tensorflow/tfjs";
 import {Tensor} from "@tensorflow/tfjs-core/dist/tensor";
 
 describe('TensorService', () => {
@@ -23,15 +23,20 @@ describe('TensorService', () => {
   /** shape [3,4,3] */
   const buffer_c = base64.decode('SUkqAAgAAAAPAAABBAABAAAABAAAAAEBBAABAAAAAwAAAAIBAwADAAAAwgAAAAMBAwABAAAAAQAAAAYBAwABAAAAAgAAAA4BAgAVAAAAyAAAABEBBAABAAAAEAEAABUBAwABAAAAAwAAABYBBAABAAAAAwAAABcBBAABAAAASAAAABoBBQABAAAA7gAAABsBBQABAAAA9gAAABwBAwABAAAAAQAAACgBAwABAAAAAQAAADEBAgAMAAAA/gAAAAAAAAAQABAAEAB7InNoYXBlIjogWzMsIDQsIDNdfQAAAAAAAAAAAAAAAAAAAAAAAAEAAAABAAAAAQAAAAEAAAB0aWZmZmlsZS5weQAAAAAAAAAvAwwAHwAvAw0AHQAmAwsAHgAvAwsAHwAyAwwAHQApAw4AGwAqAwwAHQAuAwoAHwAwAwwAHAAqAw4AGwAwAw0AHgA2AwsAHQA=')
 
-  function round_tensor(x: Tensor, decimals: number = 3) {
-    // https://www.tensorflow.org/js/guide/platform_environment#precision
-    const multiplier = scalar(Math.pow(decimals, 10), x.dtype);
-    return round(x.mul(multiplier)).div(multiplier);
-  }
+  const cut = (value: any, precision: number = 6) => parseFloat(value).toPrecision(precision);
 
   function tensorTester(a: any, b: any): boolean | void {
+    /*
+    Precision issues with float32 tensor values and different backends (webgl, cpu)
+    otherwise `a.equal(b).all().dataSync()[0] === 1` would suffice
+    https://www.tensorflow.org/js/guide/platform_environment#precision
+    Avoiding `setBackend('cpu')` in web worker with this solution
+     */
     if (a instanceof Tensor && b instanceof Tensor) {
-      return round_tensor(a).dataSync()[0] == round_tensor(b).dataSync()[0];
+      const aData = a.dataSync();
+      const bData = b.dataSync();
+      return a.shape.every((value: number, index: number) => value === b.shape[index])
+        && aData.every((value: number, index: number) => cut(value) === cut(bData[index]));
     }
   }
 
@@ -48,7 +53,6 @@ describe('TensorService', () => {
   it('#initializeTensors should create tensors from ArrayBuffers', (done: DoneFn) => {
     console.log('Backend: ' + getBackend());
     console.log(ENV.features);
-
     const tensors = [tensor_a, tensor_b];
 
     const buffers = [buffer_a, buffer_b];
